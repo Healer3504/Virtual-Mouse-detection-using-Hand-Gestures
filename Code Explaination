@@ -1,0 +1,232 @@
+4.code explanation:
+STEP 1 : Import the libraries.
+import cv2
+import mediapipe as mp
+import pyautogui
+import random
+import numpy as np
+from pynput.mouse import Button, Controller
+Cv2 :It handles video capture and from the webcam and draws frames.
+Mediapipe :it's used for hand tracking to detect hand landmarks.
+pyautogui:it's utilized to move the cursor and perform mouse actions (like
+clicks).
+numpy: It’s used for calculating distances and angles between hand landmarks.
+pynput.mouse: A library for controlling the mouse. It allows you to simulate
+mouse clicks.
+STEP 2 : Setting up mouse controller.
+mouse = Controller()
+STEP 3 : Getting screen dimensions.
+screen_width, screen_height = pyautogui.size()
+STEP 4: Initializing MediaPipe handles
+mpHands = mp.solutions.hands
+hands = mpHands.Hands(
+ static_image_mode=False,
+ model_complexity=1,
+ min_detection_confidence=0.7,
+ min_tracking_confidence=0.7,
+ max_num_hands=1
+)
+mpHands: Initializes the mediapipe hands solution for detecting hand 
+if __name__ == '__main__':
+ main()
+5). RUN TIME ENVIRONMENT SETUP:(How to run this code)
+Step 1: Set Up Visual Studio Code
+1. Install Visual Studio Code: If you haven't already, download and install
+it from here.
+2. Install Python Extension:
+○ Open VS Code.
+○ Go to the Extensions view (Ctrl + Shift + X).
+○ Search for "Python" in the Marketplace and install the Python
+extension by Microsoft.
+Step 2: Install Python and Required Libraries
+1. Install Python: If you don't have Python installed, download it from here
+and follow the instructions to install it.
+2. Check Python installation:
+○ Open a terminal (Ctrl + ~) in VS Code.
+○ Type python --version to ensure Python is installed and
+accessible.
+ 3. Install Required Libraries: You need to install libraries used in the code.
+ Open a terminal in VS Code.
+pip install opencv-python mediapipe pyautogui numpy pynput
+ Run the above command.
+Step 3: Create a Python File in VS Code
+1. Create a New Project Folder:
+○ Open VS Code, go to File > Open Folder, and create/select a
+new folder for your project (e.g., VirtualMouseProject).
+2. Create a Python Script:
+○ Inside this folder, create a new file called virtual_mouse.py by
+right-clicking in the Explorer pane and selecting New File.
+3. Copy and Paste the Code:
+○ Copy the code you provided (including the utility functions and the
+main script).
+○ Paste it into the virtual_mouse.py file.
+Step 4: Select Python Interpreter in VS Code
+1. Select Interpreter:
+○ Press Ctrl + Shift + P to open the command palette.
+○ Type and select Python: Select Interpreter.
+○ Choose the Python interpreter you installed (it should show up
+automatically).
+Step 5: Run the Python Code
+Program Execution:
+● Your webcam will open, and the hand gestures will be tracked based on
+the code.
+● Moving your hand should allow you to control the mouse cursor. Specific
+gestures (left click, right click, etc.) will be recognized and performed
+based on how the code is written.
+ Possible Gestures
+● Move Mouse: Move your index finger while holding the thumb close to the
+palm.
+● Left Click: Make a pinching gesture with your thumb and index finger.
+● Right Click: Curl your middle finger while the index finger is straight.
+● Double Click: Use both fingers curled for a double click.
+● Screenshot: A specific hand gesture (like closing the thumb and index
+finger tightly) triggers a screenshot.
+static_image_mode=False: This tells the model to expect continuous video
+frames rather than a single image.
+model_complexity=1: Sets the complexity level of the model (0 for simpler, 1
+for more complex).
+min_detection_confidence=0.7: The model will only recognize a hand if it is at
+least 70% confident.
+min_tracking_confidence=0.7: Once the hand is detected, the model will track
+it with a minimum 70% confidence level.
+max_num_hands=1: Limits the model to detecting one hand at a time.
+STEP 5: finding the finger tip.
+def find_finger_tip(processed):
+ if processed.multi_hand_landmarks:
+ hand_landmarks = processed.multi_hand_landmarks[0] # Assuming
+only one hand is detected
+ index_finger_tip =
+hand_landmarks.landmark[mpHands.HandLandmark.INDEX_FINGER_TIP]
+ return index_finger_tip
+ return None, None
+processed.multi_hand_landmarks: Checks if the hand landmarks are detected
+in the current frame.
+hand_landmarks.landmark[mpHands.HandLandmark.INDEX_FINGER_TIP:
+Retrieves the coordinates of the index finger's tip from the detected landmarks.
+Return: If a hand is detected, the function returns the coordinates of the index
+finger tip. If no hand is detected, it returns None.
+STEP 6 : Moving the mouse.
+def move_mouse(index_finger_tip):
+ if index_finger_tip is not None:
+ x = int(index_finger_tip.x * screen_width)
+ y = int(index_finger_tip.y / 2 * screen_height)
+ pyautogui.moveTo(x, y)
+index_finger_tip: This function takes the index finger's coordinates and maps
+them to screen coordinates.
+x, y: The normalized hand landmark coordinates are multiplied by the screen's
+width and height to map them to the correct position on the screen.
+pyautogui.moveTo(x, y): Moves the mouse pointer to the calculated (x, y)
+coordinates
+Step 7 : Gesture Detection(CLICK ACTIONS)
+● Left click
+def is_left_click(landmark_list, thumb_index_dist):
+ return (
+ get_angle(landmark_list[5], landmark_list[6],
+landmark_list[8]) < 50 and
+ get_angle(landmark_list[9], landmark_list[10],
+landmark_list[12]) > 90 and
+ thumb_index_dist > 50
+ )
+● Right click
+def is_right_click(landmark_list, thumb_index_dist):
+ return (
+ get_angle(landmark_list[9], landmark_list[10],
+landmark_list[12]) < 50 and
+ get_angle(landmark_list[5], landmark_list[6],
+landmark_list[8]) > 90 and
+ thumb_index_dist > 50
+ )
+Checks if the middle finger is bent, indicating a right-click gesture, while
+the index finger remains straight.
+● Double click
+def is_double_click(landmark_list, thumb_index_dist):
+ return (
+ get_angle(landmark_list[5], landmark_list[6],
+landmark_list[8]) < 50 and
+ get_angle(landmark_list[9], landmark_list[10],
+landmark_list[12]) < 50 and
+ thumb_index_dist > 50
+ )
+Checks if both the index and middle fingers are bent, indicating a doubleclick gesture.
+● Screen shot
+def is_screenshot(landmark_list, thumb_index_dist):
+ return (
+ get_angle(landmark_list[5], landmark_list[6],
+landmark_list[8]) < 50 and
+ get_angle(landmark_list[9], landmark_list[10],
+landmark_list[12]) < 50 and
+ thumb_index_dist < 50
+ )
+Checks if both fingers are bent and the thumb is close to the index finger,
+indicating a screenshot gesture.
+STEP 8 : Main Gesture Detection function
+def detect_gesture(frame, landmark_list, processed):
+ if len(landmark_list) >= 21:
+ index_finger_tip = find_finger_tip(processed)
+ thumb_index_dist = get_distance([landmark_list[4],
+landmark_list[5]])
+ if thumb_index_dist < 50 and get_angle(landmark_list[5],
+landmark_list[6], landmark_list[8]) > 90:
+ move_mouse(index_finger_tip)
+ elif is_left_click(landmark_list, thumb_index_dist):
+ mouse.press(Button.left)
+ mouse.release(Button.left)
+ cv2.putText(frame, "Left Click", (50, 50),
+cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+ elif is_right_click(landmark_list, thumb_index_dist):
+ mouse.press(Button.right)
+ mouse.release(Button.right)
+ cv2.putText(frame, "Right Click", (50, 50),
+cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+ elif is_double_click(landmark_list, thumb_index_dist):
+ pyautogui.doubleClick()
+ cv2.putText(frame, "Double Click", (50, 50),
+cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
+ elif is_screenshot(landmark_list, thumb_index_dist):
+ im1 = pyautogui.screenshot()
+ label = random.randint(1, 1000)
+ im1.save(f'my_screenshot_{label}.png')
+ cv2.putText(frame, "Screenshot Taken", (50, 50),
+cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
+detect_gesture: This function checks for the current hand gesture and executes
+the appropriate action.
+cv2.putText(): Adds a text label to the video feed to indicate the gesture that
+has been detected.
+STEP 9 : Main function
+def main():
+ draw = mp.solutions.drawing_utils
+ cap = cv2.VideoCapture(0)
+ try:
+ while cap.isOpened():
+ ret, frame = cap.read()
+ if not ret:
+ break
+ frame = cv2.flip(frame, 1)
+ frameRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+ processed = hands.process(frameRGB)
+ landmark_list = []
+ if processed.multi_hand_landmarks:
+ hand_landmarks = processed.multi_hand_landmarks[0]
+ draw.draw_landmarks(frame, hand_landmarks,
+mpHands.HAND_CONNECTIONS)
+ for lm in hand_landmarks.landmark:
+ landmark_list.append((lm.x, lm.y))
+ detect_gesture(frame, landmark_list, processed)
+ cv2.imshow('Frame', frame)
+ if cv2.waitKey(1) & 0xFF == ord('q'):
+ break
+ finally:
+ cap.release()
+ cv2.destroyAllWindows()
+To stop the program, press (q) while the webcam window is open, or you
+can close the terminal by pressing the stop button in VS Code.
+6. Testing and Results
+6.1 Testing Environment
+● Operating System: Windows 10
+● Hardware: Laptop with webcam
+● IDE: Visual Studio Code
+6.2 Expected Results
+● The mouse should move in sync with the hand's movements.
+● Left and right-click gestures should be accurately detected.
+● Screenshots should be saved when the corresponding gesture is
+performed.
